@@ -19,18 +19,22 @@ function Next(req, res, i, mwLength, stack, contUrl = '/') {
           : req.method.toLowerCase() === middleware.method.toLowerCase();
 
         if (handlerType === 'function' && urlMatched && methodMatched) {
-          // normal middleware
+          // Normal middleware
           req.params = params;
-          return await middleware.handler(req, res, Next(req, res, i + 1, mwLength, stack));
+          return await middleware.handler(
+            req,
+            res,
+            Next(req, res, i + 1, mwLength, stack, contUrl),
+          );
         } if (handlerType === 'object' && urlMatched && methodMatched) {
-          // routed middleware
+          // Routed middleware
           const routerLn = middleware.handler.stack.length;
 
           return await Next(req, res, 0, routerLn + 1, [...middleware.handler.stack,
             // Preview Next middleware
             RouteObjectMaker(Next(req, res, i + 1, mwLength, stack, prevUrl))], nextUrl)();
         }
-        // Incase  the routed middleware is not Matched
+        // Incase the routed middleware is not Matched
         return await Next(req, res, i + 1, mwLength, stack, prevUrl)();
       } // end of the iteration
       // last default middleware
